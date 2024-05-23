@@ -213,3 +213,6 @@ nbs = AcousticMetrics.MSPSpectrumAmplitude(apth_total)
 # Calculate the OASPL from the NBS.
 oaspl_from_nbs = AcousticMetrics.OASPL(nbs)
 (oaspl_from_apth, oaspl_from_nbs)
+
+name = joinpath(@__DIR__, "vtk", "ge1p5_vtk")
+outfiles = AcousticAnalogies.to_paraview_collection(name, ses)
