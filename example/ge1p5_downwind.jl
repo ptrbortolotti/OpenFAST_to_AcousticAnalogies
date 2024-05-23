@@ -144,8 +144,8 @@ offset = 0.0  # Angular offset between the source and target coordinate systems 
 rot_trans = SteadyRotXTransformation(t0, omega, offset)
 
 # orient the rotation axis of the blades as it is the global frame
-rot_axis = @SVector [0.0, 0.0, 1.0]
-blade_axis = @SVector [0.0, 1.0, 0.0]
+rot_axis = @SVector [1.0, 0.0, 0.0] # rotation axis aligned along global x-axis 
+blade_axis = @SVector [0.0, 0.0, 1.0]  # blade 1 pointing up, along z-axis 
 global_trans = ConstantLinearMap(hcat(rot_axis, blade_axis, rot_axis×blade_axis))
 
 # blade to move with the appropriate forward velocity, and 
@@ -170,7 +170,7 @@ ses = ses .|> trans
 # So we'll need to define our acoustic observer before we can calculate the noise heard by it. 
 # For this example, we'll assume that our acoustic observer is stationary in the global frame.
 
-x0 = @SVector [118.5, -80.0, 0.0] # IEC location
+x0 = @SVector [118.5, 0.0, -79.0] # IEC location, 118.5 m downwind on the ground (hub height is 79 m)
 obs = StationaryAcousticObserver(x0)
 
 # Now, in order to perform the F1A calculation, 
