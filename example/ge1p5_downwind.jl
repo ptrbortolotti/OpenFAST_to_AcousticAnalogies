@@ -47,7 +47,7 @@ cs_area = cs_area_over_chord_squared.*chord.^2
 # load openfast output
 # Import the DelimitedFiles module
 # Define the file path
-file_path = joinpath(@__DIR__, "..", "openfast_out", "ge1p5_040_dw.out")
+file_path = joinpath(@__DIR__, "ge1p5_040_dw.out")
 
 # Function to parse a line of data, converting strings to floats
 function parse_line(line)
@@ -112,17 +112,13 @@ l1 = lines!(ax1, radii, Fn_b3[:,1], label ="b3")
 l2 = lines!(ax2, radii, Ft_b1[:,1], label ="b1")
 l2 = lines!(ax2, radii, Ft_b2[:,1], label ="b2")
 l2 = lines!(ax2, radii, Ft_b3[:,1], label ="b3")
-
 hidexdecorations!(ax1, grid=false)
 save(joinpath(@__DIR__, "Fn_t.png"), fig)
 
-
-
 # normal and circumferential loading as a function of radial position along 
 # the blade. The loading is in units of force per unit span (here, Newtons/meter).
-fn = Fn_b1[:,1]
-
-fc = Ft_b1[:,1]
+fn = cat(transpose(Fn_b1), transpose(Fn_b2), transpose(Fn_b3), dims=3)
+fc = cat(transpose(Ft_b1), transpose(Ft_b2), transpose(Ft_b3), dims=3)
 
 # ambient air density and speed of sound.
 rho = 1.0  # kg/m^3
@@ -132,20 +128,12 @@ c0 = 340.0  # m/s
 v = 0.0  # m/s
 omega = 18 * 2*pi/60  # rad/s
 
-# one rotation of the blade
-period = 2*pi/omega
-num_src_times = 64
-dt = 2*period/(num_src_times-1)
-src_times = (0:num_src_times-1).*dt
-
-# some reshaping
+# some reshaping, ses[i, j, k] holds the CompactSourceElement at src_time[i], radii[j], and blade number k
 θs = reshape(θs, 1, 1, :)
 radii = reshape(radii, 1, :, 1)
 dradii = reshape(dradii, 1, :, 1)
 cs_area = reshape(cs_area, 1, :, 1)
-fn = reshape(fn, 1, :, 1)
-fc = reshape(fc, 1, :, 1)
-src_times = reshape(src_times, :, 1, 1)  # This isn't really necessary.
+src_times = reshape(time, :, 1, 1)  # This isn't really necessary.
 
 # source elements, with negative fn
 ses = CompactSourceElement.(rho, c0, radii, θs, dradii, cs_area, -fn, 0.0, fc, src_times)
@@ -182,7 +170,7 @@ ses = ses .|> trans
 # So we'll need to define our acoustic observer before we can calculate the noise heard by it. 
 # For this example, we'll assume that our acoustic observer is stationary in the global frame.
 
-x0 = @SVector [118.5, -80.0, 0.0]  # 100 ft in meters
+x0 = @SVector [118.5, -80.0, 0.0] # IEC location
 obs = StationaryAcousticObserver(x0)
 
 # Now, in order to perform the F1A calculation, 
@@ -200,10 +188,10 @@ apth = f1a.(ses, Ref(obs), obs_time)
 # But we can't add them directly, yet, since the observer times are not all the same. What we need to do 
 # is first interpolate the apth of each source onto a common observer time grid, and then add them up. 
 # We'll do this using the AcousticAnalogies.combine function.
-
+period = 2*pi/omega
 bpp = period/num_blades  # blade passing period
 obs_time_range = 2*bpp
-num_obs_times = 128
+num_obs_times = length(time)
 apth_total = combine(apth, obs_time_range, num_obs_times, 1)
 
 # We can now have a look at the total acoustic pressure time history at the observer:
@@ -211,10 +199,9 @@ fig = Figure()
 ax1 = fig[1, 1] = Axis(fig, xlabel="time, blade passes", ylabel="monopole, Pa")
 ax2 = fig[2, 1] = Axis(fig, xlabel="time, blade passes", ylabel="dipole, Pa")
 ax3 = fig[3, 1] = Axis(fig, xlabel="time, blade passes", ylabel="total, Pa")
-t_nondim = (AcousticMetrics.time(apth_total) .- AcousticMetrics.starttime(apth_total))./bpp
-l1 = lines!(ax1, t_nondim, apth_total.p_m)
-l2 = lines!(ax2, t_nondim, apth_total.p_d)
-l3 = lines!(ax3, t_nondim, apth_total.p_m.+apth_total.p_d)
+l1 = lines!(ax1, time, apth_total.p_m)
+l2 = lines!(ax2, time, apth_total.p_d)
+l3 = lines!(ax3, time, apth_total.p_m.+apth_total.p_d)
 hidexdecorations!(ax1, grid=false)
 hidexdecorations!(ax2, grid=false)
 save(joinpath(@__DIR__, "openfast-apth_total.png"), fig)
