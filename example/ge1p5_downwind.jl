@@ -47,7 +47,7 @@ cs_area = cs_area_over_chord_squared.*chord.^2
 # load openfast output
 # Import the DelimitedFiles module
 # Define the file path
-file_path = joinpath(@__DIR__, "ge1p5_040_dw.out")
+file_path = joinpath(@__DIR__, "turbulent_720s.out")
 
 # Function to parse a line of data, converting strings to floats
 function parse_line(line)
