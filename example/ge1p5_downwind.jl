@@ -6,6 +6,8 @@ using KinematicCoordinateTransformations
 using LinearAlgebra: ×
 using StaticArrays
 using AcousticMetrics
+using Statistics
+
 
 
 num_blades = 3  # number of blades
@@ -76,6 +78,7 @@ end
 # Convert the data to an array of arrays (matrix)
 data = reduce(hcat, data)
 time = data[1, :]
+sim_length_s = time[end] - time[1] # s
 
 # Reopen the file and read the lines
 lines = open(file_path) do f
@@ -94,6 +97,7 @@ id_b3_Fn = findfirst(x -> x == "AB3N001Fn", headers)
 id_b1_Ft = findfirst(x -> x == "AB1N001Ft", headers)
 id_b2_Ft = findfirst(x -> x == "AB2N001Ft", headers)
 id_b3_Ft = findfirst(x -> x == "AB3N001Ft", headers)
+id_rot_speed = findfirst(x -> x == "RotSpeed", headers)
 n_elems = length(radii)
 Fn_b1 = data[id_b1_Fn:id_b1_Fn+n_elems-1,:]
 Ft_b1 = data[id_b1_Ft:id_b1_Ft+n_elems-1,:]
@@ -101,7 +105,7 @@ Fn_b2 = data[id_b2_Fn:id_b2_Fn+n_elems-1,:]
 Ft_b2 = data[id_b2_Ft:id_b2_Ft+n_elems-1,:]
 Fn_b3 = data[id_b3_Fn:id_b3_Fn+n_elems-1,:]
 Ft_b3 = data[id_b3_Ft:id_b3_Ft+n_elems-1,:]
-
+omega_rpm = mean(data[id_rot_speed,:])
 
 fig = Figure()
 ax1 = fig[1, 1] = Axis(fig, xlabel="Span Position (m)", ylabel="Fn (N/m)")
@@ -124,9 +128,9 @@ fc = cat(transpose(Ft_b1), transpose(Ft_b2), transpose(Ft_b3), dims=3)
 rho = 1.0  # kg/m^3
 c0 = 340.0  # m/s
 
-# rotor is spinning at 18 rpm
+# rotor motion in lateral speed (0 for wind turbines) and rotational speed in rad/s
 v = 0.0  # m/s
-omega = 18 * 2*pi/60  # rad/s
+omega = omega_rpm * 2*pi/60  # rad/s
 
 # some reshaping, ses[i, j, k] holds the CompactSourceElement at src_time[i], radii[j], and blade number k
 θs = reshape(θs, 1, 1, :)
@@ -190,7 +194,7 @@ apth = f1a.(ses, Ref(obs), obs_time)
 # We'll do this using the AcousticAnalogies.combine function.
 period = 2*pi/omega
 bpp = period/num_blades  # blade passing period
-obs_time_range = 2*bpp
+obs_time_range = sim_length_s/60*omega_rpm*bpp
 num_obs_times = length(time)
 apth_total = combine(apth, obs_time_range, num_obs_times, 1)
 
@@ -214,5 +218,5 @@ nbs = AcousticMetrics.MSPSpectrumAmplitude(apth_total)
 oaspl_from_nbs = AcousticMetrics.OASPL(nbs)
 (oaspl_from_apth, oaspl_from_nbs)
 
-name = joinpath(@__DIR__, "vtk", "ge1p5_vtk")
-outfiles = AcousticAnalogies.to_paraview_collection(name, ses)
+# name = joinpath(@__DIR__, "vtk", "ge1p5_vtk")
+# outfiles = AcousticAnalogies.to_paraview_collection(name, ses)
