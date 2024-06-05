@@ -260,10 +260,11 @@ function doit()
     # DJI: In the guided example the observer time is calculated explicitly like this, but you can also just go like this:
     # DJI:  apth = f1a.(ses, Ref(obs))
     # DJI: and it will be calculated internally.
-    obs_time = adv_time.(ses, Ref(obs))
+    # obs_time = adv_time.(ses, Ref(obs))
 
-    # compact F1A calculation!
-    apth = f1a.(ses, Ref(obs), obs_time)
+    # # compact F1A calculation!
+    # apth = f1a.(ses, Ref(obs), obs_time)
+    apth = f1a.(ses, Ref(obs))
 
     # We now have a noise prediction for each of the individual source elements in ses at the acoustic observer obs. 
     # What we ultimately want is the total noise prediction at obs—we want to add all the acoustic pressures in apth together. 
