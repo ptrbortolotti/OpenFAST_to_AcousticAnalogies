@@ -2,7 +2,6 @@ module GE1p5Downwind
 
 using AcousticAnalogies
 using AcousticMetrics
-# DJI: I added this package, so it will need to be installed to get the script to run again (hopefully just `] add ColorSchemes` at the Julia REPL).
 using ColorSchemes: colorschemes
 using GLMakie
 using DelimitedFiles
@@ -16,7 +15,7 @@ using Statistics
 function doit()
 
     num_blades = 3  # number of blades
-    Rhub = 1.  # meters, fake hub
+    Rhub = 1.25  # meters
     Rtip = 38.5  # meters
     radii = [0, 2.3576, 5.8663, 8.1488, 10.3908, 
         12.5901, 14.7441, 16.85, 18.9047, 20.9043, 
@@ -90,6 +89,7 @@ function doit()
     # Convert the data to an array of arrays (matrix)
     data = reduce(hcat, data)
     time = data[1, :]
+    avg_wind_speed = mean(data[2, :])
     sim_length_s = time[end] - time[1] # s
     @show length(time)
 
@@ -200,7 +200,7 @@ function doit()
     # DJI: freestream velocity is 10 m/s in the positive x direction.
     # DJI: but to do F1A correctly, we need to put all source elements in a coordinate system that moves with the fluid, i.e. one in which the fluid appears stationary.
     # So, to do that, we have the blades translating in the negative x direction.
-    v = -10.0  # m/s
+    v = -avg_wind_speed  # m/s
     omega = omega_rpm * 2*pi/60  # rad/s
 
     # some reshaping, ses[i, j, k] holds the CompactSourceElement at src_time[i], radii[j], and blade number k
