@@ -284,9 +284,9 @@ function doit()
 
     # We can now have a look at the total acoustic pressure time history at the observer:
     fig = Figure()
-    ax1 = fig[1, 1] = Axis(fig, xlabel="time, blade passes", ylabel="monopole, Pa")
-    ax2 = fig[2, 1] = Axis(fig, xlabel="time, blade passes", ylabel="dipole, Pa")
-    ax3 = fig[3, 1] = Axis(fig, xlabel="time, blade passes", ylabel="total, Pa")
+    ax1 = fig[1, 1] = Axis(fig, xlabel="time, s", ylabel="monopole, Pa")
+    ax2 = fig[2, 1] = Axis(fig, xlabel="time, s", ylabel="dipole, Pa")
+    ax3 = fig[3, 1] = Axis(fig, xlabel="time, s", ylabel="total, Pa")
     # DJI: The x axis label says the time is in units of blade passes, but I think the `time` vector here is in seconds.
     # DJI: So need to divide by the blade passing period `bpp` to get blade passes.
     l1 = lines!(ax1, time./bpp, apth_total.p_m)
