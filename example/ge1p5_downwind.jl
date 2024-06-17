@@ -191,7 +191,7 @@ function doit()
 
     save(joinpath(@__DIR__, "Fn_t-all_time.png"), fig)
 
-    # normal and circumferential loading as a function of radial position along 
+    # Normal and circumferential loading as a function of radial position along 
     # the blade. The loading is in units of force per unit span (here, Newtons/meter).
     fn = cat(transpose(Fn_b1), transpose(Fn_b2), transpose(Fn_b3), dims=3)
     fc = cat(transpose(Ft_b1), transpose(Ft_b2), transpose(Ft_b3), dims=3)
